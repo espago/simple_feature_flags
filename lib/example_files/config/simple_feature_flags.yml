@@ -1,0 +1,19 @@
+---
+# Feature Flags that will be created if they don't exist already
+:mandatory:
+# example flag - it will be created with these properties if there is no such flag in Redis/RAM
+# - name: example
+#   active: 'true' # 'false' is the default value
+#   description: example
+
+- name: example_flag
+  description: This is an example flag which will be automatically added when you start your app (it will be disabled)
+
+- name: example_active_flag
+  active: 'true'
+  description: This is an example flag which will be automatically added when you start your app (it will be enabled)
+
+# nothing will happen if flag that is to be removed does not exist in Redis/RAM
+# An array of Feature Flag names that will be removed on app startup
+:remove:
+- flag_to_be_removed

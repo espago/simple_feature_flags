@@ -1,7 +1,10 @@
 {
   "cSpell.words": [
     "Espago",
+    "autorun",
     "bindir",
+    "flushdb",
+    "optparse",
     "solargraph",
     "testtask"
   ]
