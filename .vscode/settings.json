@@ -3,7 +3,12 @@
     "Espago",
     "autorun",
     "bindir",
+    "concat",
     "flushdb",
+    "hget",
+    "hgetall",
+    "hset",
+    "klass",
     "optparse",
     "solargraph",
     "testtask"

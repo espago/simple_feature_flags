@@ -1,6 +1,10 @@
 # frozen_string_literal: true
 
+require 'json'
+
 module SimpleFeatureFlags
+  NOT_PRESENT = ::Object.new.freeze
+
   class NoSuchCommandError < StandardError; end
 
   class IncorrectWorkingDirectoryError < StandardError; end

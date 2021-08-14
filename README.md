@@ -127,6 +127,174 @@ FEATURE_FLAGS = ::SimpleFeatureFlags::RamStorage.new(config_file)
 
 ### Functionality
 
+#### Activate a feature
+
+Activates a feature in the global scope
+
+```ruby
+FEATURE_FLAGS.active?(:feature_name) #=> false
+
+FEATURE_FLAGS.activate(:feature_name)
+
+FEATURE_FLAGS.active?(:feature_name) #=> true
+```
+
+#### Deactivate a feature
+
+Deactivates a feature in the global scope
+
+```ruby
+FEATURE_FLAGS.active?(:feature_name) #=> true
+
+FEATURE_FLAGS.deactivate(:feature_name)
+
+FEATURE_FLAGS.active?(:feature_name) #=> false
+```
+
+#### Activate a feature for a particular record/object
+
+```ruby
+FEATURE_FLAGS.activate_for(:feature_name, User.first) #=> true
+FEATURE_FLAGS.active_for?(:feature_name, User.first) #=> true
+FEATURE_FLAGS.active_for?(:feature_name, User.last) #=> false
+```
+
+Note that the flag itself has to be `active` in the global scope for any record/object specific settings to work.
+When the flag is `deactivated` it is completely turned off globally and for every specific record/object.
+
+```ruby
+# The flag is deactivated in the global scope to begin with
+FEATURE_FLAGS.active?(:feature_name) #=> false
+
+# We activate it for the first User
+FEATURE_FLAGS.activate_for(:feature_name, User.first)
+
+FEATURE_FLAGS.active?(:feature_name) #=> false
+# It is globally `deactivated` though, so the feature stays inactive for all users
+FEATURE_FLAGS.active_for?(:feature_name, User.first) #=> false
+
+# Once we activate the flag in the global scope, record specific settings will be applied
+FEATURE_FLAGS.activate(:feature_name)
+
+FEATURE_FLAGS.active?(:feature_name) #=> true
+FEATURE_FLAGS.active_for?(:feature_name, User.first) #=> true
+FEATURE_FLAGS.active_for?(:feature_name, User.last) #=> false
+
+FEATURE_FLAGS.deactivate(:feature_name)
+
+FEATURE_FLAGS.active?(:feature_name) #=> false
+FEATURE_FLAGS.active_for?(:feature_name, User.first) #=> false
+FEATURE_FLAGS.active_for?(:feature_name, User.last) #=> false
+```
+
+There is a convenience method `activate_for!`, which activates the feature in the global scope and for specific records/objects at the same time
+
+```ruby
+# The flag is deactivated in the global scope to begin with
+FEATURE_FLAGS.active?(:feature_name) #=> false
+
+# We activate it in the global scope and for the first User
+FEATURE_FLAGS.activate_for!(:feature_name, User.first)
+
+FEATURE_FLAGS.active?(:feature_name) #=> true
+FEATURE_FLAGS.active_for?(:feature_name, User.first) #=> true
+FEATURE_FLAGS.active_for?(:feature_name, User.last) #=> false
+```
+
+A feature that is `active` in the global scope is inactive for all specific records, unless it has been activated for them.
+
+```ruby
+# The flag is active in the global scope to begin with
+FEATURE_FLAGS.active?(:feature_name) #=> true
+FEATURE_FLAGS.active_for?(:feature_name, User.first) #=> false
+FEATURE_FLAGS.active_for?(:feature_name, User.last) #=> false
+
+FEATURE_FLAGS.activate_for(:feature_name, User.first)
+
+FEATURE_FLAGS.active?(:feature_name) #=> true
+FEATURE_FLAGS.active_for?(:feature_name, User.first) #=> true
+FEATURE_FLAGS.active_for?(:feature_name, User.last) #=> false
+```
+
+You can also pass an array of objects to activate all of them simultaneously
+
+```ruby
+FEATURE_FLAGS.active_for?(:feature_name, User.first) #=> false
+FEATURE_FLAGS.active_for?(:feature_name, User.find(2)) #=> false
+FEATURE_FLAGS.active_for?(:feature_name, User.last) #=> false
+
+FEATURE_FLAGS.activate_for(:feature_name, User.first(2))
+
+FEATURE_FLAGS.active_for?(:feature_name, User.first) #=> true
+FEATURE_FLAGS.active_for?(:feature_name, User.find(2)) #=> true
+FEATURE_FLAGS.active_for?(:feature_name, User.last) #=> false
+```
+
+#### Activate the feature for every record
+
+```ruby
+# The flag is active in the global scope to begin with
+FEATURE_FLAGS.active?(:feature_name) #=> true
+# It is also enabled for the first user
+FEATURE_FLAGS.active_for?(:feature_name, User.first) #=> true
+FEATURE_FLAGS.active_for?(:feature_name, User.last) #=> false
+
+# We force it onto every user
+FEATURE_FLAGS.activate!(:feature_name)
+
+FEATURE_FLAGS.active?(:feature_name) #=> true
+FEATURE_FLAGS.active_for?(:feature_name, User.first) #=> true
+FEATURE_FLAGS.active_for?(:feature_name, User.last) #=> true
+
+# We can easily return to the previous settings
+FEATURE_FLAGS.activate(:feature_name)
+
+FEATURE_FLAGS.active?(:feature_name) #=> true
+FEATURE_FLAGS.active_for?(:feature_name, User.first) #=> true
+FEATURE_FLAGS.active_for?(:feature_name, User.last) #=> false
+```
+
+#### Deactivate a feature for a particular record/object
+
+```ruby
+FEATURE_FLAGS.active_for?(:feature_name, User.first) #=> true
+
+FEATURE_FLAGS.deactivate_for(:feature_name, User.first)
+
+FEATURE_FLAGS.active_for?(:feature_name, User.first) #=> false
+```
+
+
+#### Run a block of code only when the flag is active
+
+There are two ways of running code only when the feature flag is active
+
+```ruby
+number = 1
+if FEATURE_FLAGS.active?(:feature_name)
+  number += 1
+end
+
+# or using a block
+
+# this code will run only when the :feature_name flag is active
+FEATURE_FLAGS.when_active(:feature_name) do
+  number += 1
+end
+
+# feature flags that don't exist will return false
+FEATURE_FLAGS.active?(:non_existant) #=> false
+
+if FEATURE_FLAGS.active_for?(:feature_name, User.first)
+  number += 1
+end
+
+# this code will run only if the :feature_name flag is active for the first User
+FEATURE_FLAGS.when_active_for(:feature_name, User.first) do
+  number += 1
+end
+```
+
 #### Adding feature flags
 
 You can add new feature flags programmatically, though we highly encourage you to use the generated `config/simple_feature_flags.yml` file instead. It will make it easier to add and/or remove feature flags automatically on app startup without having to add them manually after merging a branch with new feature flags.
@@ -149,27 +317,6 @@ In case you'd like to remove flags programmatically
 ```ruby
 FEATURE_FLAGS.remove(:feature_name)
 FEATURE_FLAGS.active?(:feature_name) #=> false
-```
-
-#### Run a block of code only when the flag is active
-
-There are two ways of running code only when the feature flag is active
-
-```ruby
-number = 1
-if FEATURE_FLAGS.active?(:feature_name)
-    number += 1
-end
-
-# or using a block
-
-# this code will run only when the :feature_name flag is active
-FEATURE_FLAGS.with_feature(:feature_name) do
-    number += 1
-end
-
-# feature flags that don't exist will return false
-FEATURE_FLAGS.active?(:non_existant) #=> false
 ```
 
 
