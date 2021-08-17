@@ -5,7 +5,6 @@ require 'support/universal_storage_tests'
 
 require 'redis'
 require 'redis-namespace'
-require 'yaml'
 
 module SimpleFeatureFlags
   class RedisStorageTest < Minitest::Test
@@ -71,7 +70,7 @@ module SimpleFeatureFlags
       end
       assert_equal 3, number
 
-      @feature_flags.when_active('feature_three', true) do
+      @feature_flags.when_active('feature_three') do
         number += 1
       end
       assert_equal 3, number

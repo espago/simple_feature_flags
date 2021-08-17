@@ -25,7 +25,7 @@ module Support
 
       assert_equal 3, number
 
-      @feature_flags.when_active('feature_three', true) do
+      @feature_flags.when_active('feature_three') do
         number += 1
       end
       assert_equal 3, number
@@ -35,14 +35,14 @@ module Support
       assert_equal 3, @feature_flags.all.size
 
       assert @feature_flags.add('feature_three', 'Some new description')
-      assert !@feature_flags.active?('feature_three', true)
+      assert !@feature_flags.active?('feature_three')
 
       assert_equal 'Some new description', @feature_flags.description('feature_three')
 
       assert_equal 4, @feature_flags.all.size
 
       assert @feature_flags.add('feature_four', 'Some other new description', true)
-      assert @feature_flags.active?('feature_four', true)
+      assert @feature_flags.active?('feature_four')
 
       assert_equal 'Some other new description', @feature_flags.description('feature_four')
 
@@ -75,7 +75,7 @@ module Support
       assert_equal 3, @feature_flags.all.size
 
       assert !@feature_flags.remove('feature_three')
-      assert !@feature_flags.active?('feature_three', true)
+      assert !@feature_flags.active?('feature_three')
 
       assert_equal 3, @feature_flags.all.size
     end
@@ -94,7 +94,7 @@ module Support
       assert_equal 3, @feature_flags.all.size
 
       assert !@feature_flags.activate('feature_three')
-      assert !@feature_flags.active?('feature_three', true)
+      assert !@feature_flags.active?('feature_three')
 
       assert_equal 3, @feature_flags.all.size
     end
@@ -112,7 +112,7 @@ module Support
       assert_equal 3, @feature_flags.all.size
 
       assert !@feature_flags.deactivate('feature_three')
-      assert !@feature_flags.active?('feature_three', true)
+      assert !@feature_flags.active?('feature_three')
 
       assert_equal 3, @feature_flags.all.size
     end
@@ -125,7 +125,11 @@ module Support
 
       test_value = 1
 
+      assert @feature_flags.activate_partially(:feature_one)
+
       assert @feature_flags.active?(:feature_one)
+      assert !@feature_flags.active_globally?(:feature_one)
+      assert @feature_flags.active_partially?(:feature_one)
       assert !@feature_flags.active_for?(:feature_one, test_object)
       assert !@feature_flags.active_for?(:feature_one, test_object_two)
 
@@ -138,6 +142,8 @@ module Support
       assert @feature_flags.activate_for(:feature_one, test_object)
 
       assert @feature_flags.active?(:feature_one)
+      assert !@feature_flags.active_globally?(:feature_one)
+      assert @feature_flags.active_partially?(:feature_one)
       assert @feature_flags.active_for?(:feature_one, test_object)
       assert !@feature_flags.active_for?(:feature_one, test_object_two)
 
@@ -175,8 +181,10 @@ module Support
 
       assert_equal 1, test_value
 
-      assert @feature_flags.activate(:feature_two)
+      assert @feature_flags.activate_partially(:feature_two)
       assert @feature_flags.active?(:feature_two)
+      assert @feature_flags.active_partially?(:feature_two)
+      assert !@feature_flags.active_globally?(:feature_two)
       assert @feature_flags.active_for?(:feature_two, test_object)
       assert !@feature_flags.active_for?(:feature_two, test_object_two)
 
@@ -184,7 +192,11 @@ module Support
         test_value += 1
       end
 
-      assert_equal 2, test_value
+      @feature_flags.when_active_partially(:feature_two) do
+        test_value += 1
+      end
+
+      assert_equal 3, test_value
     end
 
     def test_activate_a_flag_globally
@@ -195,9 +207,11 @@ module Support
       assert !@feature_flags.active_for?(:feature_two, test_object)
       assert !@feature_flags.active_for?(:feature_two, test_object_two)
 
-      assert @feature_flags.activate!(:feature_two)
+      assert @feature_flags.activate(:feature_two)
 
       assert @feature_flags.active?(:feature_two)
+      assert @feature_flags.active_globally?(:feature_two)
+      assert !@feature_flags.active_partially?(:feature_two)
       assert @feature_flags.active_for?(:feature_two, test_object)
       assert @feature_flags.active_for?(:feature_two, test_object_two)
     end
@@ -207,8 +221,10 @@ module Support
       test_object_two = ::Object.new
 
       assert !test_object.respond_to?(:id)
+      assert @feature_flags.activate_partially(:feature_one)
 
       assert @feature_flags.active?(:feature_one)
+      assert @feature_flags.active_partially?(:feature_one)
       assert !@feature_flags.active_for?(:feature_one, test_object, :object_id)
       assert !@feature_flags.active_for?(:feature_one, test_object_two, :object_id)
 
@@ -223,6 +239,8 @@ module Support
       test_object = TestObject.new
       test_object_two = TestObject.new
       test_object_three = TestObject.new
+
+      assert @feature_flags.activate_partially(:feature_one)
 
       assert @feature_flags.active?(:feature_one)
       assert !@feature_flags.active_for?(:feature_one, test_object)
@@ -239,6 +257,8 @@ module Support
       test_object = TestObject.new
       test_object_two = TestObject.new
 
+      assert @feature_flags.activate_partially(:feature_one)
+
       assert @feature_flags.activate_for(:feature_one, test_object)
 
       assert @feature_flags.active?(:feature_one)
@@ -252,10 +272,12 @@ module Support
       assert !@feature_flags.active_for?(:feature_one, test_object_two)
     end
 
-    def test_deactivate_multiple_flags_for_a_model
+    def test_deactivate_a_flag_for_multiple_model
       test_object = TestObject.new
       test_object_two = TestObject.new
       test_object_three = TestObject.new
+
+      assert @feature_flags.activate_partially(:feature_one)
 
       assert @feature_flags.activate_for(:feature_one, [test_object, test_object_two])
 
@@ -277,9 +299,13 @@ module Support
       test_object_two = TestObject.new
       test_object_three = TestObject.new
 
+      assert @feature_flags.activate_partially(:feature_one)
+
       assert @feature_flags.activate_for(:feature_one, [test_object, test_object_two])
 
       assert @feature_flags.active?(:feature_one)
+      assert @feature_flags.active_partially?(:feature_one)
+      assert !@feature_flags.active_globally?(:feature_one)
       assert @feature_flags.active_for?(:feature_one, test_object)
       assert @feature_flags.active_for?(:feature_one, test_object_two)
       assert !@feature_flags.active_for?(:feature_one, test_object_three)
@@ -287,6 +313,8 @@ module Support
       assert @feature_flags.deactivate(:feature_one)
 
       assert !@feature_flags.active?(:feature_one)
+      assert !@feature_flags.active_partially?(:feature_one)
+      assert !@feature_flags.active_globally?(:feature_one)
       assert !@feature_flags.active_for?(:feature_one, test_object)
       assert !@feature_flags.active_for?(:feature_one, test_object_two)
       assert !@feature_flags.active_for?(:feature_one, test_object_three)

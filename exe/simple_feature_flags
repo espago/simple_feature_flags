@@ -3,7 +3,6 @@
 
 $LOAD_PATH.unshift("#{__dir__}/../lib")
 
-require 'byebug'
 require 'simple_feature_flags'
 
 ::SimpleFeatureFlags::Cli::Runner.new.run

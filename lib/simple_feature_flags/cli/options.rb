@@ -5,10 +5,11 @@ require 'optparse'
 module SimpleFeatureFlags
   module Cli
     class Options
-      attr_reader :opt_parser, :generate, :help, :rails
+      attr_reader :opt_parser, :generate, :help, :rails, :ui
 
       def initialize(args)
         @rails = true
+        @ui = false
 
         @opt_parser = ::OptionParser.new do |opts|
           opts.banner = 'Usage: simple_feature_flags [options]'
@@ -31,6 +32,7 @@ module SimpleFeatureFlags
           opts.separator ''
           opts.separator 'Modifiers:'
 
+          opts.on('--[no-]ui', '--[no-]web-ui', "Add the #{UI_GEM} gem and mount it in routes") { |u| @ui = u }
           opts.on('--[no-]rails', 'Use generators suited for Rails apps') { |r| @rails = r }
         end
 

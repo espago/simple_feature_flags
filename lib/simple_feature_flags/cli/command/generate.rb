@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require 'fileutils'
-require 'byebug'
 
 module SimpleFeatureFlags
   module Cli
@@ -37,6 +36,41 @@ module SimpleFeatureFlags
           puts '----------'
           puts "- #{::File.join(destination_dir, 'config')}"
           print_dir_tree(example_config_dir, 1)
+
+          return unless options.ui
+
+          file_gsub(routes_rb, /.routes.draw do/) do |match|
+            "#{match}\n  mount #{WEB_UI_CLASS_NAME}.new => '/admin/simple_feature_flags'\n"
+          end
+
+          ui_config_line = <<~CONF
+            #{UI_CLASS_NAME}.configure do |config|
+              config.instance = FEATURE_FLAGS
+              config.featurable_class_names = %w[User]
+            end
+          CONF
+
+          file_append(initializer_file, ui_config_line)
+          file_append(gemfile, %(gem '#{UI_GEM}'))
+
+          puts "\nModified:"
+          puts '----------'
+          puts "* #{routes_rb}"
+          puts "* #{gemfile}"
+
+          puts "\nBundling..."
+          system 'bundle'
+        end
+
+        def file_gsub(file_path, regexp, &block)
+          new_content = File.read(file_path).gsub(regexp, &block)
+          File.open(file_path, 'wb') { |file| file.write(new_content) }
+        end
+
+        def file_append(file_path, line)
+          new_content = File.read(file_path)
+          new_content = "#{new_content}\n#{line}\n"
+          File.open(file_path, 'wb') { |file| file.write(new_content) }
         end
 
         def print_dir_tree(dir, embed_level = 0)
@@ -52,6 +86,18 @@ module SimpleFeatureFlags
           rescue Errno::ENOTDIR
             puts "#{padding}* #{child}"
           end
+        end
+
+        def initializer_file
+          ::File.join(destination_dir, 'config', 'initializers', 'simple_feature_flags.rb')
+        end
+
+        def gemfile
+          ::File.join(destination_dir, 'Gemfile')
+        end
+
+        def routes_rb
+          ::File.join(destination_dir, 'config', 'routes.rb')
         end
 
         def example_config_dir

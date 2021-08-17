@@ -4,6 +4,7 @@
     "autorun",
     "bindir",
     "concat",
+    "featurable",
     "flushdb",
     "hget",
     "hgetall",

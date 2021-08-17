@@ -27,8 +27,6 @@ module SimpleFeatureFlags
       assert @feature_flags.add('feature_remain', 'Remain description', true)
     end
 
-    include ::Support::UniversalStorageTests
-
     def test_correctly_throw_errors_on_non_mandatory_flags
       assert_equal SimpleFeatureFlags::TestRamStorage, @feature_flags.class
       assert_nil @feature_flags.redis
@@ -68,11 +66,6 @@ module SimpleFeatureFlags
         end
       end
 
-      assert_equal 3, number
-
-      @feature_flags.when_active('feature_three', true) do
-        number += 1
-      end
       assert_equal 3, number
     end
   end

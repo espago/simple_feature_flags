@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'yaml'
+
 module SimpleFeatureFlags
   class RamStorage
     attr_reader :file, :mandatory_flags, :flags
@@ -13,15 +15,34 @@ module SimpleFeatureFlags
       import_flags_from_file
     end
 
-    def active?(feature, _ignore_file = false)
-      __active__(feature)
+    def active(feature)
+      case flags.dig(feature.to_sym, 'active')
+      when 'globally', :globally
+        :globally
+      when 'partially', :partially
+        :partially
+      when 'true', true
+        true
+      when 'false', false
+        false
+      end
+    end
+
+    def active?(feature)
+      return true if active(feature)
+
+      false
     end
 
     def active_globally?(feature)
-      flags.dig(feature.to_sym, 'active') == 'globally'
+      ACTIVE_GLOBALLY.include? flags.dig(feature.to_sym, 'active')
     end
 
-    def active_for?(feature, object, object_id_method = :id)
+    def active_partially?(feature)
+      ACTIVE_PARTIALLY.include? flags.dig(feature.to_sym, 'active')
+    end
+
+    def active_for?(feature, object, object_id_method = CONFIG.default_id_method)
       return false unless active?(feature)
       return true if active_globally?(feature)
 
@@ -43,19 +64,31 @@ module SimpleFeatureFlags
       flags.dig(feature.to_sym, 'description')
     end
 
-    def when_active(feature, ignore_file = false, &block)
-      return unless active?(feature, ignore_file)
+    def when_active(feature, &block)
+      return unless active?(feature)
 
       block.call
     end
 
-    def when_active_for(feature, object, object_id_method = :id, &block)
+    def when_active_globally(feature, &block)
+      return unless active_globally?(feature)
+
+      block.call
+    end
+
+    def when_active_partially(feature, &block)
+      return unless active_partially?(feature)
+
+      block.call
+    end
+
+    def when_active_for(feature, object, object_id_method = CONFIG.default_id_method, &block)
       return unless active_for?(feature, object, object_id_method)
 
       block.call
     end
 
-    def activate!(feature)
+    def activate(feature)
       return false unless exists?(feature)
 
       flags[feature.to_sym]['active'] = 'globally'
@@ -63,15 +96,17 @@ module SimpleFeatureFlags
       true
     end
 
-    def activate(feature)
+    alias activate_globally activate
+
+    def activate_partially(feature)
       return false unless exists?(feature)
 
-      flags[feature.to_sym]['active'] = 'true'
+      flags[feature.to_sym]['active'] = 'partially'
 
       true
     end
 
-    def activate_for(feature, objects, object_id_method = :id)
+    def activate_for(feature, objects, object_id_method = CONFIG.default_id_method)
       return false unless exists?(feature)
 
       objects = [objects] unless objects.is_a? ::Array
@@ -81,7 +116,7 @@ module SimpleFeatureFlags
       to_activate_hash.each do |klass, ids|
         (active_objects_hash[klass] = ids) && next unless active_objects_hash[klass]
 
-        active_objects_hash[klass].concat(ids).sort!
+        active_objects_hash[klass].concat(ids).uniq!.sort!
       end
 
       flags[feature.to_sym]['active_for_objects'] = active_objects_hash
@@ -89,10 +124,10 @@ module SimpleFeatureFlags
       true
     end
 
-    def activate_for!(feature, objects, object_id_method = :id)
+    def activate_for!(feature, objects, object_id_method = CONFIG.default_id_method)
       return false unless activate_for(feature, objects, object_id_method)
 
-      activate(feature)
+      activate_partially(feature)
     end
 
     def deactivate!(feature)
@@ -116,7 +151,7 @@ module SimpleFeatureFlags
       flags.dig(feature.to_sym, 'active_for_objects') || {}
     end
 
-    def deactivate_for(feature, objects, object_id_method = :id)
+    def deactivate_for(feature, objects, object_id_method = CONFIG.default_id_method)
       return false unless exists?(feature)
 
       active_objects_hash = active_objects(feature)
@@ -190,14 +225,10 @@ module SimpleFeatureFlags
 
     private
 
-    def objects_to_hash(objects, object_id_method = :id)
+    def objects_to_hash(objects, object_id_method = CONFIG.default_id_method)
       objects = [objects] unless objects.is_a? ::Array
 
       objects.group_by { |ob| ob.class.to_s }.transform_values { |arr| arr.map(&object_id_method) }
-    end
-
-    def __active__(feature)
-      %w[true globally].include? flags.dig(feature.to_sym, 'active')
     end
 
     def import_flags_from_file
