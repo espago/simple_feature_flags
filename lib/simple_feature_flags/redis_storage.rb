@@ -184,11 +184,10 @@ module SimpleFeatureFlags
     def add(feature, description, active = 'false')
       return false if exists?(feature)
 
-      active = case active
-               when true, 'true'
-                 'true'
-               when 'globally', :globally
+      active = if ACTIVE_GLOBALLY.include?(active)
                  'globally'
+               elsif ACTIVE_PARTIALLY.include?(active)
+                 'partially'
                else
                  'false'
                end

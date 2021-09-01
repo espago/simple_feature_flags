@@ -367,9 +367,9 @@ In case you'd like to remove flags programmatically
 ```ruby
 FEATURE_FLAGS.remove(:feature_name)
 
-FEATURE_FLAGS.active?(:feature_active_partially) #=> false
-FEATURE_FLAGS.active_partially?(:feature_active_partially) #=> false
-FEATURE_FLAGS.active_globally?(:feature_active_partially) #=> false
+FEATURE_FLAGS.active?(:feature_name) #=> false
+FEATURE_FLAGS.active_partially?(:feature_name) #=> false
+FEATURE_FLAGS.active_globally?(:feature_name) #=> false
 ```
 
 
