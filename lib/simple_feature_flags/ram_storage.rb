@@ -34,12 +34,24 @@ module SimpleFeatureFlags
       false
     end
 
+    def inactive?(feature)
+      !active?(feature)
+    end
+
     def active_globally?(feature)
       ACTIVE_GLOBALLY.include? flags.dig(feature.to_sym, 'active')
     end
 
+    def inactive_globally?(feature)
+      !active_globally?(feature)
+    end
+
     def active_partially?(feature)
       ACTIVE_PARTIALLY.include? flags.dig(feature.to_sym, 'active')
+    end
+
+    def inactive_partially?(feature)
+      !active_partially?(feature)
     end
 
     def active_for?(feature, object, object_id_method = CONFIG.default_id_method)
@@ -54,6 +66,10 @@ module SimpleFeatureFlags
       active_ids.include? object.public_send(object_id_method)
     end
 
+    def inactive_for?(feature, object, object_id_method = CONFIG.default_id_method)
+      !active_for?(feature, object, object_id_method)
+    end
+
     def exists?(feature)
       return false if [nil, ''].include? flags[feature.to_sym]
 
@@ -64,28 +80,52 @@ module SimpleFeatureFlags
       flags.dig(feature.to_sym, 'description')
     end
 
-    def when_active(feature, &block)
+    def when_active(feature)
       return unless active?(feature)
 
-      block.call
+      yield
     end
 
-    def when_active_globally(feature, &block)
+    def when_inactive(feature)
+      return unless inactive?(feature)
+
+      yield
+    end
+
+    def when_active_globally(feature)
       return unless active_globally?(feature)
 
-      block.call
+      yield
     end
 
-    def when_active_partially(feature, &block)
+    def when_inactive_globally(feature)
+      return unless inactive_globally?(feature)
+
+      yield
+    end
+
+    def when_active_partially(feature)
       return unless active_partially?(feature)
 
-      block.call
+      yield
     end
 
-    def when_active_for(feature, object, object_id_method = CONFIG.default_id_method, &block)
+    def when_inactive_partially(feature)
+      return unless inactive_partially?(feature)
+
+      yield
+    end
+
+    def when_active_for(feature, object, object_id_method = CONFIG.default_id_method)
       return unless active_for?(feature, object, object_id_method)
 
-      block.call
+      yield
+    end
+
+    def when_inactive_for(feature, object, object_id_method = CONFIG.default_id_method)
+      return unless inactive_for?(feature, object, object_id_method)
+
+      yield
     end
 
     def activate(feature)

@@ -136,11 +136,19 @@ FEATURE_FLAGS.active?(:feature_name) #=> false
 FEATURE_FLAGS.active_globally?(:feature_name) #=> false
 FEATURE_FLAGS.active_partially?(:feature_name) #=> false
 
+FEATURE_FLAGS.inactive?(:feature_name) #=> true
+FEATURE_FLAGS.inactive_globally?(:feature_name) #=> true
+FEATURE_FLAGS.inactive_partially?(:feature_name) #=> true
+
 FEATURE_FLAGS.activate(:feature_name) # or FEATURE_FLAGS.activate_globally(:feature_name)
 
 FEATURE_FLAGS.active?(:feature_name) #=> true
 FEATURE_FLAGS.active_globally?(:feature_name) #=> true
 FEATURE_FLAGS.active_partially?(:feature_name) #=> false
+
+FEATURE_FLAGS.inactive?(:feature_name) #=> false
+FEATURE_FLAGS.inactive_globally?(:feature_name) #=> false
+FEATURE_FLAGS.inactive_partially?(:feature_name) #=> true
 ```
 
 #### Deactivate a feature
@@ -149,10 +157,12 @@ Deactivates a feature in the global scope
 
 ```ruby
 FEATURE_FLAGS.active?(:feature_name) #=> true
+FEATURE_FLAGS.inactive?(:feature_name) #=> false
 
 FEATURE_FLAGS.deactivate(:feature_name)
 
 FEATURE_FLAGS.active?(:feature_name) #=> false
+FEATURE_FLAGS.inactive?(:feature_name) #=> true
 ```
 
 #### Activate a feature for a particular record/object
@@ -162,11 +172,19 @@ FEATURE_FLAGS.active_partially?(:feature_name) #=> true
 FEATURE_FLAGS.active_for?(:feature_name, User.first) #=> false
 FEATURE_FLAGS.active_for?(:feature_name, User.last) #=> false
 
+FEATURE_FLAGS.inactive_partially?(:feature_name) #=> false
+FEATURE_FLAGS.inactive_for?(:feature_name, User.first) #=> true
+FEATURE_FLAGS.inactive_for?(:feature_name, User.last) #=> true
+
 FEATURE_FLAGS.activate_for(:feature_name, User.first) #=> true
 
 FEATURE_FLAGS.active_partially?(:feature_name) #=> true
 FEATURE_FLAGS.active_for?(:feature_name, User.first) #=> true
 FEATURE_FLAGS.active_for?(:feature_name, User.last) #=> false
+
+FEATURE_FLAGS.inactive_partially?(:feature_name) #=> false
+FEATURE_FLAGS.inactive_for?(:feature_name, User.first) #=> false
+FEATURE_FLAGS.inactive_for?(:feature_name, User.last) #=> true
 ```
 
 Note that the flag itself has to be active `partially` for any record/object specific settings to work.
@@ -299,10 +317,19 @@ if FEATURE_FLAGS.active?(:feature_name)
   number += 1
 end
 
+if FEATURE_FLAGS.inactive?(:feature_name)
+  number += 1
+end
+
 # or using a block
 
 # this code will run only when the :feature_name flag is active (either partially or globally)
 FEATURE_FLAGS.when_active(:feature_name) do
+  number += 1
+end
+
+# the opposite
+FEATURE_FLAGS.when_inactive(:feature_name) do
   number += 1
 end
 
@@ -311,20 +338,40 @@ FEATURE_FLAGS.when_active_globally(:feature_name) do
   number += 1
 end
 
+# the opposite
+FEATURE_FLAGS.when_inactive_globally(:feature_name) do
+  number += 1
+end
+
 # this code will run only when the :feature_name flag is active partially (only for specific records/users)
 FEATURE_FLAGS.when_active_partially(:feature_name) do
   number += 1
 end
 
-# this code will run only if the :feature_name flag is active partially for the first User
+# the opposite
+FEATURE_FLAGS.when_inactive_partially(:feature_name) do
+  number += 1
+end
+
+# this code will run only if the :feature_name flag is active for the first User
 FEATURE_FLAGS.when_active_for(:feature_name, User.first) do
+  number += 1
+end
+
+# the opposite
+FEATURE_FLAGS.when_inactive_for(:feature_name, User.first) do
   number += 1
 end
 
 # feature flags that don't exist will return false
 FEATURE_FLAGS.active?(:non_existant) #=> false
+FEATURE_FLAGS.inactive?(:non_existant) #=> true
 
 if FEATURE_FLAGS.active_for?(:feature_name, User.first)
+  number += 1
+end
+
+if FEATURE_FLAGS.inactive_for?(:feature_name, User.first)
   number += 1
 end
 ```
@@ -340,7 +387,7 @@ FEATURE_FLAGS.add(:feature_name, 'Description')
 FEATURE_FLAGS.active?(:feature_name) #=> false
 FEATURE_FLAGS.active_partially?(:feature_name) #=> false
 FEATURE_FLAGS.active_globally?(:feature_name) #=> false
-FEATURE_FLAGS.active_for?(:feature_active_partially, User.first) #=> false
+FEATURE_FLAGS.active_for?(:feature_name, User.first) #=> false
 
 # add a new globally active flag
 FEATURE_FLAGS.add(:active_feature, 'Description', :globally)
@@ -370,6 +417,10 @@ FEATURE_FLAGS.remove(:feature_name)
 FEATURE_FLAGS.active?(:feature_name) #=> false
 FEATURE_FLAGS.active_partially?(:feature_name) #=> false
 FEATURE_FLAGS.active_globally?(:feature_name) #=> false
+
+FEATURE_FLAGS.inactive?(:feature_name) #=> true
+FEATURE_FLAGS.inactive_partially?(:feature_name) #=> true
+FEATURE_FLAGS.inactive_globally?(:feature_name) #=> true
 ```
 
 

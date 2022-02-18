@@ -10,8 +10,8 @@ module SimpleFeatureFlags
   UI_CLASS_NAME = '::SimpleFeatureFlags::Ui'
   WEB_UI_CLASS_NAME = '::SimpleFeatureFlags::Ui::Web'
 
-  ACTIVE_GLOBALLY = ['globally', :globally, 'true', true].freeze
-  ACTIVE_PARTIALLY = ['partially', :partially].freeze
+  ACTIVE_GLOBALLY = ::Set['globally', :globally, 'true', true].freeze
+  ACTIVE_PARTIALLY = ::Set['partially', :partially].freeze
 
   class NoSuchCommandError < StandardError; end
 
