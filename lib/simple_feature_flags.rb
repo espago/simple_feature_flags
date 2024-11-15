@@ -2,6 +2,7 @@
 # frozen_string_literal: true
 
 require 'json'
+require 'set'
 require 'sorbet-runtime'
 
 Dir[File.expand_path('simple_feature_flags/*.rb', __dir__)].each { |file| require file }
