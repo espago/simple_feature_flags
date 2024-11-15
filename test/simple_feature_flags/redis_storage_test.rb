@@ -30,7 +30,9 @@ module SimpleFeatureFlags
       file = Tempfile.new("feature_flags_#{Time.now.to_i}")
       File.write(T.must(file.path), T.unsafe(flags).to_yaml)
 
-      redis = Redis.new(db: 14)
+      host = ENV['REDIS_HOST'] || 'localhost'
+      port = ENV['REDIS_PORT'] || '6379'
+      redis = Redis.new(host: host, port: port, db: 14)
       redis_namespaced = Redis::Namespace.new(:feature_flags, redis: redis)
 
       # clean redis before each test

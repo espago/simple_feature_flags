@@ -9,8 +9,23 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    services:
+      # Label used to access the service container
+      redis:
+        # Docker Hub image
+        image: redis
+        # Set health checks to wait until redis has started
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     env:
       CI: true
+      # The hostname used to communicate with the Redis service container
+      REDIS_HOST: redis
+      # The default Redis port
+      REDIS_PORT: 6379
     strategy:
       matrix:
         ruby-version: ['3.1', '3.2', '3.3']
