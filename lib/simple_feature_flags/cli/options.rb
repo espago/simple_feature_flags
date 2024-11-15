@@ -1,15 +1,31 @@
+# typed: true
 # frozen_string_literal: true
 
 require 'optparse'
 
 module SimpleFeatureFlags
   module Cli
+    # Parses CLI options.
     class Options
-      attr_reader :opt_parser, :generate, :help, :rails, :ui
+      extend T::Sig
 
+      sig { returns(OptionParser) }
+      attr_reader :opt_parser
+
+      sig { returns(T::Boolean) }
+      attr_reader :generate
+
+      sig { returns(T::Boolean) }
+      attr_reader :rails
+
+      sig { returns(T::Boolean) }
+      attr_reader :ui
+
+      sig { params(args: T::Array[String]).void }
       def initialize(args)
-        @rails = true
-        @ui = false
+        @rails = T.let(true, T::Boolean)
+        @ui = T.let(false, T::Boolean)
+        @generate = T.let(false, T::Boolean)
 
         @opt_parser = ::OptionParser.new do |opts|
           opts.banner = 'Usage: simple_feature_flags [options]'

@@ -13,5 +13,9 @@
     "optparse",
     "solargraph",
     "testtask"
-  ]
+  ],
+  "sorbet.enabled": true,
+  "[ruby]": {
+      "editor.defaultFormatter": "Shopify.ruby-lsp"
+  }
 }

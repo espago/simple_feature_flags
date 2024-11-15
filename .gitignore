@@ -6,5 +6,6 @@
 /pkg/
 /spec/reports/
 /tmp/
+/.vscode
 .byebug_history
 my_examples
