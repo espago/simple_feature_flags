@@ -69,6 +69,36 @@ module Support
       assert_equal 5, number
     end
 
+    def test_do_activate
+      assert_equal false, feature_flags.active('feature_two')
+      feature_flags.do_activate('feature_two') do
+        assert_equal :globally, feature_flags.active('feature_two')
+      end
+      assert_equal false, feature_flags.active('feature_two')
+
+      feature_flags.add('feature_partial', '', :partially)
+      assert_equal :partially, feature_flags.active('feature_partial')
+      feature_flags.do_activate('feature_partial') do
+        assert_equal :globally, feature_flags.active('feature_partial')
+      end
+      assert_equal :partially, feature_flags.active('feature_partial')
+    end
+
+    def test_do_activate_partially
+      assert_equal false, feature_flags.active('feature_two')
+      feature_flags.do_activate_partially('feature_two') do
+        assert_equal :partially, feature_flags.active('feature_two')
+      end
+      assert_equal false, feature_flags.active('feature_two')
+
+      feature_flags.add('feature_partial', '', true)
+      assert_equal :globally, feature_flags.active('feature_partial')
+      feature_flags.do_activate_partially('feature_partial') do
+        assert_equal :partially, feature_flags.active('feature_partial')
+      end
+      assert_equal :globally, feature_flags.active('feature_partial')
+    end
+
     def test_add_a_new_feature
       assert_equal 3, feature_flags.all.size
 

@@ -256,6 +256,26 @@ module SimpleFeatureFlags
 
     alias activate_globally activate
 
+    sig do
+      override
+        .type_parameters(:R)
+        .params(
+          feature: T.any(Symbol, String),
+          block:   T.proc.returns(T.type_parameter(:R)),
+        )
+        .returns(T.type_parameter(:R))
+    end
+    def do_activate(feature, &block)
+      feature = feature.to_sym
+      prev_value = flags.dig(feature, 'active')
+      activate(feature)
+      block.call
+    ensure
+      T.unsafe(flags)[feature]['active'] = prev_value
+    end
+
+    alias do_activate_globally do_activate
+
     # Activates the given flag partially. Returns `false` if it does not exist.
     sig { override.params(feature: T.any(Symbol, String)).returns(T::Boolean) }
     def activate_partially(feature)
@@ -265,6 +285,24 @@ module SimpleFeatureFlags
       flag['active'] = 'partially'
 
       true
+    end
+
+    sig do
+      override
+        .type_parameters(:R)
+        .params(
+          feature: T.any(Symbol, String),
+          block:   T.proc.returns(T.type_parameter(:R)),
+        )
+        .returns(T.type_parameter(:R))
+    end
+    def do_activate_partially(feature, &block)
+      feature = feature.to_sym
+      prev_value = flags.dig(feature, 'active')
+      activate_partially(feature)
+      block.call
+    ensure
+      T.unsafe(flags)[feature]['active'] = prev_value
     end
 
     # Activates the given flag for the given objects. Returns `false` if it does not exist.
@@ -407,7 +445,7 @@ module SimpleFeatureFlags
           active:      T.any(String, Symbol, T::Boolean, NilClass),
         ).returns(T.nilable(T::Hash[String, T.anything]))
     end
-    def add(feature, description, active = 'false')
+    def add(feature, description = '', active = 'false')
       return if exists?(feature)
 
       active = if ACTIVE_GLOBALLY.include?(active)

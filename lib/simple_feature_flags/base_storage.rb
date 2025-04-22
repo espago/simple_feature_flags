@@ -166,13 +166,49 @@ module SimpleFeatureFlags
     sig { abstract.params(feature: T.any(Symbol, String)).returns(T::Boolean) }
     def activate(feature); end
 
+    # Activates the flag, calls the block and restores the previous state of the flag.
+    sig do
+      abstract
+        .type_parameters(:R)
+        .params(
+          feature: T.any(Symbol, String),
+          block:   T.proc.returns(T.type_parameter(:R)),
+        )
+        .returns(T.type_parameter(:R))
+    end
+    def do_activate(feature, &block); end
+
     # Activates the given flag globally. Returns `false` if it does not exist.
     sig { abstract.params(feature: T.any(Symbol, String)).returns(T::Boolean) }
     def activate_globally(feature); end
 
+    # Activates the flag globally, calls the block and restores the previous state of the flag.
+    sig do
+      abstract
+        .type_parameters(:R)
+        .params(
+          feature: T.any(Symbol, String),
+          block:   T.proc.returns(T.type_parameter(:R)),
+        )
+        .returns(T.type_parameter(:R))
+    end
+    def do_activate_globally(feature, &block); end
+
     # Activates the given flag partially. Returns `false` if it does not exist.
     sig { abstract.params(feature: T.any(Symbol, String)).returns(T::Boolean) }
     def activate_partially(feature); end
+
+    # Activates the flag partially, calls the block and restores the previous state of the flag.
+    sig do
+      abstract
+        .type_parameters(:R)
+        .params(
+          feature: T.any(Symbol, String),
+          block:   T.proc.returns(T.type_parameter(:R)),
+        )
+        .returns(T.type_parameter(:R))
+    end
+    def do_activate_partially(feature, &block); end
 
     # Activates the given flag for the given objects. Returns `false` if it does not exist.
     sig do
@@ -252,7 +288,7 @@ module SimpleFeatureFlags
           active:      T.any(String, Symbol, T::Boolean, NilClass),
         ).returns(T.nilable(T::Hash[String, T.anything]))
     end
-    def add(feature, description, active = 'false'); end
+    def add(feature, description = '', active = 'false'); end
 
     # Removes the given feature flag.
     # Returns its data or nil if it does not exist.
