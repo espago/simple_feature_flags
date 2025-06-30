@@ -10,17 +10,17 @@ module SimpleFeatureFlags
       class Generate
         extend T::Sig
 
-        CONFIG_FILE = T.let('simple_feature_flags.yml', String)
+        CONFIG_FILE = 'simple_feature_flags.yml' #: String
 
-        sig { returns(Options) }
+        #: Options
         attr_reader :options
 
-        sig { params(options: Options).void }
+        #: (Options options) -> void
         def initialize(options)
           @options = options
         end
 
-        sig { void }
+        #: -> void
         def run
           if options.rails
             generate_for_rails
@@ -36,7 +36,7 @@ module SimpleFeatureFlags
 
         private
 
-        sig { void }
+        #: -> void
         def generate_for_rails
           ::FileUtils.cp_r example_config_dir, destination_dir
 
@@ -70,26 +70,20 @@ module SimpleFeatureFlags
           system 'bundle'
         end
 
-        sig do
-          params(
-            file_path: String,
-            regexp:    Regexp,
-            block:     T.proc.params(arg0: String).returns(String),
-          ).void
-        end
+        #: (String file_path, Regexp regexp) { (String arg0) -> String } -> void
         def file_gsub(file_path, regexp, &block)
           new_content = File.read(file_path).gsub(regexp, &block)
           File.binwrite(file_path, new_content)
         end
 
-        sig { params(file_path: String, line: String).void }
+        #: (String file_path, String line) -> void
         def file_append(file_path, line)
           new_content = File.read(file_path)
           new_content = "#{new_content}\n#{line}\n"
           File.binwrite(file_path, new_content)
         end
 
-        sig { params(dir: String, embed_level: Integer).void }
+        #: (String dir, ?Integer embed_level) -> void
         def print_dir_tree(dir, embed_level = 0)
           padding = ' ' * (embed_level * 2)
 
@@ -105,32 +99,32 @@ module SimpleFeatureFlags
           end
         end
 
-        sig { returns String }
+        #: -> String
         def initializer_file
           ::File.join(destination_dir, 'config', 'initializers', 'simple_feature_flags.rb')
         end
 
-        sig { returns String }
+        #: -> String
         def gemfile
           ::File.join(destination_dir, 'Gemfile')
         end
 
-        sig { returns String }
+        #: -> String
         def routes_rb
           ::File.join(destination_dir, 'config', 'routes.rb')
         end
 
-        sig { returns String }
+        #: -> String
         def example_config_dir
           ::File.join(::File.expand_path(__dir__), '..', '..', '..', 'example_files', 'config')
         end
 
-        sig { returns String }
+        #: -> String
         def example_config_file
           ::File.join(example_config_dir, CONFIG_FILE)
         end
 
-        sig { returns String }
+        #: -> String
         def destination_dir
           if options.rails && !::Dir.new(::Dir.pwd).entries.include?('config')
             raise IncorrectWorkingDirectoryError,
@@ -140,7 +134,7 @@ module SimpleFeatureFlags
           ::Dir.pwd
         end
 
-        sig { returns String }
+        #: -> String
         def destination_file
           @destination_file ||= ::File.join(destination_dir, CONFIG_FILE)
         end

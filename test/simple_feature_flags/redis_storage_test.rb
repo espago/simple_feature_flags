@@ -45,7 +45,8 @@ module SimpleFeatureFlags
       @feature_flags = SimpleFeatureFlags::RedisStorage.new(redis_namespaced, T.must(file.path))
     end
 
-    sig { override.returns(SimpleFeatureFlags::RedisStorage) }
+    # @override
+    #: SimpleFeatureFlags::RedisStorage
     attr_reader :feature_flags
 
     include ::Support::UniversalStorageTests

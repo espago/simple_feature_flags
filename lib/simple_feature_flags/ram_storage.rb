@@ -6,16 +6,18 @@ require 'yaml'
 module SimpleFeatureFlags
   # Stores feature flags in memory.
   class RamStorage < BaseStorage
-    sig { override.returns(String) }
+    # @override
+    #: String
     attr_reader :file
 
-    sig { override.returns(T::Array[String]) }
+    # @override
+    #: Array[String]
     attr_reader :mandatory_flags
 
-    sig { returns(T::Hash[Symbol, T::Hash[String, Object]]) }
+    #: Hash[Symbol, Hash[String, Object]]
     attr_reader :flags
 
-    sig { params(file: String).void }
+    #: (String file) -> void
     def initialize(file)
       @file = file
       @mandatory_flags = []
@@ -25,7 +27,8 @@ module SimpleFeatureFlags
     end
 
     # Checks whether the flag is active. Returns `true`, `false`, `:globally` or `:partially`
-    sig { override.params(feature: T.any(Symbol, String)).returns(T.any(Symbol, T::Boolean)) }
+    # @override
+    #: ((Symbol | String) feature) -> (Symbol | bool)
     def active(feature)
       case flags.dig(feature.to_sym, 'active')
       when 'globally', :globally
@@ -40,7 +43,8 @@ module SimpleFeatureFlags
     end
 
     # Checks whether the flag is active.
-    sig { override.params(feature: T.any(Symbol, String)).returns(T::Boolean) }
+    # @override
+    #: ((Symbol | String) feature) -> bool
     def active?(feature)
       return true if active(feature)
 
@@ -48,45 +52,43 @@ module SimpleFeatureFlags
     end
 
     # Checks whether the flag is inactive.
-    sig { override.params(feature: T.any(Symbol, String)).returns(T::Boolean) }
+    # @override
+    #: ((Symbol | String) feature) -> bool
     def inactive?(feature)
       !active?(feature)
     end
 
     # Checks whether the flag is active globally, for every object.
-    sig { override.params(feature: T.any(Symbol, String)).returns(T::Boolean) }
+    # @override
+    #: ((Symbol | String) feature) -> bool
     def active_globally?(feature)
       ACTIVE_GLOBALLY.include? T.unsafe(flags.dig(feature.to_sym, 'active'))
     end
 
     # Checks whether the flag is inactive globally, for every object.
-    sig { override.params(feature: T.any(Symbol, String)).returns(T::Boolean) }
+    # @override
+    #: ((Symbol | String) feature) -> bool
     def inactive_globally?(feature)
       !active_globally?(feature)
     end
 
     # Checks whether the flag is active partially, only for certain objects.
-    sig { override.params(feature: T.any(Symbol, String)).returns(T::Boolean) }
+    # @override
+    #: ((Symbol | String) feature) -> bool
     def active_partially?(feature)
       ACTIVE_PARTIALLY.include? T.unsafe(flags.dig(feature.to_sym, 'active'))
     end
 
     # Checks whether the flag is inactive partially, only for certain objects.
-    sig { override.params(feature: T.any(Symbol, String)).returns(T::Boolean) }
+    # @override
+    #: ((Symbol | String) feature) -> bool
     def inactive_partially?(feature)
       !active_partially?(feature)
     end
 
     # Checks whether the flag is active for the given object.
-    sig do
-      override
-        .params(
-          feature:          T.any(Symbol, String),
-          object:           Object,
-          object_id_method: Symbol,
-        )
-        .returns(T::Boolean)
-    end
+    # @override
+    #: ((Symbol | String) feature, Object object, ?object_id_method: Symbol) -> bool
     def active_for?(feature, object, object_id_method: CONFIG.default_id_method)
       return false unless active?(feature)
       return true if active_globally?(feature)
@@ -100,21 +102,15 @@ module SimpleFeatureFlags
     end
 
     # Checks whether the flag is inactive for the given object.
-    sig do
-      override
-        .params(
-          feature:          T.any(Symbol, String),
-          object:           Object,
-          object_id_method: Symbol,
-        )
-        .returns(T::Boolean)
-    end
+    # @override
+    #: ((Symbol | String) feature, Object object, ?object_id_method: Symbol) -> bool
     def inactive_for?(feature, object, object_id_method: CONFIG.default_id_method)
       !active_for?(feature, object, object_id_method: object_id_method)
     end
 
     # Checks whether the flag exists.
-    sig { override.params(feature: T.any(Symbol, String)).returns(T::Boolean) }
+    # @override
+    #: ((Symbol | String) feature) -> bool
     def exists?(feature)
       return false if [nil, ''].include? flags[feature.to_sym]
 
@@ -122,19 +118,15 @@ module SimpleFeatureFlags
     end
 
     # Returns the description of the flag if it exists.
-    sig { override.params(feature: T.any(Symbol, String)).returns(T.nilable(String)) }
+    # @override
+    #: ((Symbol | String) feature) -> String?
     def description(feature)
-      T.unsafe(flags.dig(feature.to_sym, 'description'))
+      flags.dig(feature.to_sym, 'description') #: as untyped
     end
 
     # Calls the given block if the flag is active.
-    sig do
-      override
-        .params(
-          feature: T.any(Symbol, String),
-          block:   T.proc.void,
-        ).void
-    end
+    # @override
+    #: ((Symbol | String) feature) { -> void } -> void
     def when_active(feature, &block)
       return unless active?(feature)
 
@@ -142,13 +134,8 @@ module SimpleFeatureFlags
     end
 
     # Calls the given block if the flag is inactive.
-    sig do
-      override
-        .params(
-          feature: T.any(Symbol, String),
-          block:   T.proc.void,
-        ).void
-    end
+    # @override
+    #: ((Symbol | String) feature) { -> void } -> void
     def when_inactive(feature, &block)
       return unless inactive?(feature)
 
@@ -156,13 +143,8 @@ module SimpleFeatureFlags
     end
 
     # Calls the given block if the flag is active globally.
-    sig do
-      override
-        .params(
-          feature: T.any(Symbol, String),
-          block:   T.proc.void,
-        ).void
-    end
+    # @override
+    #: ((Symbol | String) feature) { -> void } -> void
     def when_active_globally(feature, &block)
       return unless active_globally?(feature)
 
@@ -170,13 +152,8 @@ module SimpleFeatureFlags
     end
 
     # Calls the given block if the flag is inactive globally.
-    sig do
-      override
-        .params(
-          feature: T.any(Symbol, String),
-          block:   T.proc.void,
-        ).void
-    end
+    # @override
+    #: ((Symbol | String) feature) { -> void } -> void
     def when_inactive_globally(feature, &block)
       return unless inactive_globally?(feature)
 
@@ -184,13 +161,8 @@ module SimpleFeatureFlags
     end
 
     # Calls the given block if the flag is active partially.
-    sig do
-      override
-        .params(
-          feature: T.any(Symbol, String),
-          block:   T.proc.void,
-        ).void
-    end
+    # @override
+    #: ((Symbol | String) feature) { -> void } -> void
     def when_active_partially(feature, &block)
       return unless active_partially?(feature)
 
@@ -198,13 +170,8 @@ module SimpleFeatureFlags
     end
 
     # Calls the given block if the flag is inactive partially.
-    sig do
-      override
-        .params(
-          feature: T.any(Symbol, String),
-          block:   T.proc.void,
-        ).void
-    end
+    # @override
+    #: ((Symbol | String) feature) { -> void } -> void
     def when_inactive_partially(feature, &block)
       return unless inactive_partially?(feature)
 
@@ -212,15 +179,8 @@ module SimpleFeatureFlags
     end
 
     # Calls the given block if the flag is active for the given object.
-    sig do
-      override
-        .params(
-          feature:          T.any(Symbol, String),
-          object:           Object,
-          object_id_method: Symbol,
-          block:            T.proc.void,
-        ).void
-    end
+    # @override
+    #: ((Symbol | String) feature, Object object, ?object_id_method: Symbol) { -> void } -> void
     def when_active_for(feature, object, object_id_method: CONFIG.default_id_method, &block)
       return unless active_for?(feature, object, object_id_method: object_id_method)
 
@@ -228,15 +188,8 @@ module SimpleFeatureFlags
     end
 
     # Calls the given block if the flag is inactive for the given object.
-    sig do
-      override
-        .params(
-          feature:          T.any(Symbol, String),
-          object:           Object,
-          object_id_method: Symbol,
-          block:            T.proc.void,
-        ).void
-    end
+    # @override
+    #: ((Symbol | String) feature, Object object, ?object_id_method: Symbol) { -> void } -> void
     def when_inactive_for(feature, object, object_id_method: CONFIG.default_id_method, &block)
       return unless inactive_for?(feature, object, object_id_method: object_id_method)
 
@@ -244,11 +197,12 @@ module SimpleFeatureFlags
     end
 
     # Activates the given flag. Returns `false` if it does not exist.
-    sig { override.params(feature: T.any(Symbol, String)).returns(T::Boolean) }
+    # @override
+    #: ((Symbol | String) feature) -> bool
     def activate(feature)
       return false unless exists?(feature)
 
-      flag = T.must flags[feature.to_sym]
+      flag = flags[feature.to_sym] #: as !nil
       flag['active'] = 'globally'
 
       true
@@ -256,15 +210,8 @@ module SimpleFeatureFlags
 
     alias activate_globally activate
 
-    sig do
-      override
-        .type_parameters(:R)
-        .params(
-          feature: T.any(Symbol, String),
-          block:   T.proc.returns(T.type_parameter(:R)),
-        )
-        .returns(T.type_parameter(:R))
-    end
+    # @override
+    #: [R] ((Symbol | String) feature) { -> R } -> R
     def do_activate(feature, &block)
       feature = feature.to_sym
       prev_value = flags.dig(feature, 'active')
@@ -277,25 +224,19 @@ module SimpleFeatureFlags
     alias do_activate_globally do_activate
 
     # Activates the given flag partially. Returns `false` if it does not exist.
-    sig { override.params(feature: T.any(Symbol, String)).returns(T::Boolean) }
+    # @override
+    #: ((Symbol | String) feature) -> bool
     def activate_partially(feature)
       return false unless exists?(feature)
 
-      flag = T.must flags[feature.to_sym]
+      flag = flags[feature.to_sym] #: as !nil
       flag['active'] = 'partially'
 
       true
     end
 
-    sig do
-      override
-        .type_parameters(:R)
-        .params(
-          feature: T.any(Symbol, String),
-          block:   T.proc.returns(T.type_parameter(:R)),
-        )
-        .returns(T.type_parameter(:R))
-    end
+    # @override
+    #: [R] ((Symbol | String) feature) { -> R } -> R
     def do_activate_partially(feature, &block)
       feature = feature.to_sym
       prev_value = flags.dig(feature, 'active')
@@ -306,14 +247,8 @@ module SimpleFeatureFlags
     end
 
     # Activates the given flag for the given objects. Returns `false` if it does not exist.
-    sig do
-      override
-        .params(
-          feature:          T.any(Symbol, String),
-          objects:          Object,
-          object_id_method: Symbol,
-        ).void
-    end
+    # @override
+    #: ((Symbol | String) feature, *Object objects, ?object_id_method: Symbol) -> void
     def activate_for(feature, *objects, object_id_method: CONFIG.default_id_method)
       return false unless exists?(feature)
 
@@ -326,7 +261,7 @@ module SimpleFeatureFlags
         active_objects_hash[klass]&.concat(ids)&.uniq!&.sort! # rubocop:disable Style/SafeNavigationChainLength
       end
 
-      flag = T.must flags[feature.to_sym]
+      flag = flags[feature.to_sym] #: as !nil
       flag['active_for_objects'] = active_objects_hash
 
       true
@@ -334,14 +269,8 @@ module SimpleFeatureFlags
 
     # Activates the given flag for the given objects and sets the flag as partially active.
     # Returns `false` if it does not exist.
-    sig do
-      override
-        .params(
-          feature:          T.any(Symbol, String),
-          objects:          Object,
-          object_id_method: Symbol,
-        ).void
-    end
+    # @override
+    #: ((Symbol | String) feature, *Object objects, ?object_id_method: Symbol) -> void
     def activate_for!(feature, *objects, object_id_method: CONFIG.default_id_method)
       return false unless T.unsafe(self).activate_for(feature, *objects, object_id_method: object_id_method)
 
@@ -351,11 +280,12 @@ module SimpleFeatureFlags
     # Deactivates the given flag for all objects.
     # Resets the list of objects that this flag has been turned on for.
     # Returns `false` if it does not exist.
-    sig { override.params(feature: T.any(Symbol, String)).returns(T::Boolean) }
+    # @override
+    #: ((Symbol | String) feature) -> bool
     def deactivate!(feature)
       return false unless exists?(feature)
 
-      flag = T.must flags[feature.to_sym]
+      flag = flags[feature.to_sym] #: as !nil
       flag['active'] = 'false'
       flag['active_for_objects'] = nil
 
@@ -365,14 +295,26 @@ module SimpleFeatureFlags
     # Deactivates the given flag globally.
     # Does not reset the list of objects that this flag has been turned on for.
     # Returns `false` if it does not exist.
-    sig { override.params(feature: T.any(Symbol, String)).returns(T::Boolean) }
+    # @override
+    #: ((Symbol | String) feature) -> bool
     def deactivate(feature)
       return false unless exists?(feature)
 
-      flag = T.must flags[feature.to_sym]
+      flag = flags[feature.to_sym] #: as !nil
       flag['active'] = 'false'
 
       true
+    end
+
+    # @override
+    #: [R] ((Symbol | String) feature) { -> R } -> R
+    def do_deactivate(feature, &block)
+      feature = feature.to_sym
+      prev_value = flags.dig(feature, 'active')
+      deactivate(feature)
+      block.call
+    ensure
+      T.unsafe(flags)[feature]['active'] = prev_value
     end
 
     # Returns a hash of Objects that the given flag is turned on for.
@@ -382,24 +324,15 @@ module SimpleFeatureFlags
     #
     #      { "Page" => [25, 89], "Book" => [152] }
     #
-    sig do
-      override
-        .params(feature: T.any(Symbol, String))
-        .returns(T::Hash[String, T::Array[Object]])
-    end
+    # @override
+    #: ((Symbol | String) feature) -> Hash[String, Array[Object]]
     def active_objects(feature)
       T.unsafe(flags.dig(feature.to_sym, 'active_for_objects')) || {}
     end
 
     # Deactivates the given flag for the given objects. Returns `false` if it does not exist.
-    sig do
-      override
-        .params(
-          feature:          T.any(Symbol, String),
-          objects:          Object,
-          object_id_method: Symbol,
-        ).void
-    end
+    # @override
+    #: ((Symbol | String) feature, *Object objects, ?object_id_method: Symbol) -> void
     def deactivate_for(feature, *objects, object_id_method: CONFIG.default_id_method)
       return false unless exists?(feature)
 
@@ -414,37 +347,27 @@ module SimpleFeatureFlags
         active_ids.reject! { |id| ids_to_remove.include? id }
       end
 
-      flag = T.must flags[feature.to_sym]
+      flag = flags[feature.to_sym] #: as !nil
       flag['active_for_objects'] = active_objects_hash
 
       true
     end
 
     # Returns the data of the flag in a hash.
-    sig do
-      override
-        .params(
-          feature: T.any(Symbol, String),
-        ).returns(T.nilable(T::Hash[String, T.anything]))
-    end
+    # @override
+    #: ((Symbol | String) feature) -> Hash[String, top]?
     def get(feature)
       return unless exists?(feature)
 
-      flag = T.must flags[feature.to_sym]
+      flag = flags[feature.to_sym] #: as !nil
       flag['mandatory'] = mandatory_flags.include?(feature.to_s)
 
       flag
     end
 
     # Adds the given feature flag.
-    sig do
-      override
-        .params(
-          feature:     T.any(Symbol, String),
-          description: String,
-          active:      T.any(String, Symbol, T::Boolean, NilClass),
-        ).returns(T.nilable(T::Hash[String, T.anything]))
-    end
+    # @override
+    #: ((Symbol | String) feature, ?String description, ?(String | Symbol | bool)? active) -> Hash[String, top]?
     def add(feature, description = '', active = 'false')
       return if exists?(feature)
 
@@ -467,12 +390,8 @@ module SimpleFeatureFlags
 
     # Removes the given feature flag.
     # Returns its data or nil if it does not exist.
-    sig do
-      override
-        .params(
-          feature: T.any(Symbol, String),
-        ).returns(T.nilable(T::Hash[String, T.anything]))
-    end
+    # @override
+    #: ((Symbol | String) feature) -> Hash[String, top]?
     def remove(feature)
       return unless exists?(feature)
 
@@ -483,9 +402,8 @@ module SimpleFeatureFlags
     end
 
     # Returns the data of all feature flags.
-    sig do
-      override.returns(T::Array[T::Hash[String, T.anything]])
-    end
+    # @override
+    #: -> Array[Hash[String, top]]
     def all
       hashes = []
 

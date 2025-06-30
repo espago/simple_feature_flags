@@ -30,7 +30,8 @@ module SimpleFeatureFlags
       assert feature_flags.add('feature_remain', 'Remain description', true)
     end
 
-    sig { override.returns(SimpleFeatureFlags::RamStorage) }
+    # @override
+    #: SimpleFeatureFlags::RamStorage
     attr_reader :feature_flags
 
     include ::Support::UniversalStorageTests

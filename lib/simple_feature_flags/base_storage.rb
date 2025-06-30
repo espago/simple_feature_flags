@@ -5,11 +5,9 @@ require 'yaml'
 
 module SimpleFeatureFlags
   # Abstract class for all storage adapters.
+  # @abstract
   class BaseStorage
     extend T::Sig
-    extend T::Helpers
-
-    abstract!
 
     # Path to the file with feature flags
     sig { abstract.returns(String) }
@@ -245,6 +243,18 @@ module SimpleFeatureFlags
     sig { abstract.params(feature: T.any(Symbol, String)).returns(T::Boolean) }
     def deactivate(feature); end
 
+    # Deactivates the flag, calls the block and restores the previous state of the flag.
+    sig do
+      abstract
+        .type_parameters(:R)
+        .params(
+          feature: T.any(Symbol, String),
+          block:   T.proc.returns(T.type_parameter(:R)),
+        )
+        .returns(T.type_parameter(:R))
+    end
+    def do_deactivate(feature, &block); end
+
     # Returns a hash of Objects that the given flag is turned on for.
     # The keys are class/model names, values are arrays of IDs of instances/records.
     #
@@ -308,13 +318,13 @@ module SimpleFeatureFlags
 
     private
 
-    sig { params(objects: T::Array[Object], object_id_method: Symbol).returns(T::Hash[String, T::Array[Object]]) }
+    #: (Array[Object] objects, ?object_id_method: Symbol) -> Hash[String, Array[Object]]
     def objects_to_hash(objects, object_id_method: CONFIG.default_id_method)
       objects.group_by { |ob| ob.class.to_s }
              .transform_values { |arr| arr.map(&object_id_method) }
     end
 
-    sig { void }
+    #: -> void
     def import_flags_from_file
       changes = YAML.load_file(file)
       changes = { mandatory: [], remove: [] } unless changes.is_a? ::Hash

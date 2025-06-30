@@ -7,15 +7,15 @@ module SimpleFeatureFlags
     class Runner
       extend T::Sig
 
-      sig { returns(Options) }
+      #: Options
       attr_reader :options
 
-      sig { params(args: T::Array[String]).void }
+      #: (?Array[String] args) -> void
       def initialize(args = ARGV)
         @options = Options.new(args)
       end
 
-      sig { void }
+      #: -> void
       def run
         command_class =
           if @options.generate

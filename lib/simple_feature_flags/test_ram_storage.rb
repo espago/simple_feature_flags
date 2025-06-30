@@ -4,7 +4,8 @@
 module SimpleFeatureFlags
   # Used in tests
   class TestRamStorage < RamStorage
-    sig { override.params(feature: T.any(Symbol, String)).returns(T::Boolean) }
+    # @override
+    #: ((Symbol | String) feature) -> bool
     def active?(feature)
       unless mandatory_flags.include?(feature.to_s)
         raise(FlagNotDefinedError,

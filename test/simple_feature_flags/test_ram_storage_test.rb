@@ -30,7 +30,7 @@ module SimpleFeatureFlags
       assert feature_flags.add('feature_remain', 'Remain description', true)
     end
 
-    sig { returns(SimpleFeatureFlags::TestRamStorage) }
+    #: SimpleFeatureFlags::TestRamStorage
     attr_reader :feature_flags
 
     def test_correctly_throw_errors_on_non_mandatory_flags

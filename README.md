@@ -151,6 +151,21 @@ FEATURE_FLAGS.inactive_globally?(:feature_name) #=> false
 FEATURE_FLAGS.inactive_partially?(:feature_name) #=> true
 ```
 
+#### Activate a feature in a block
+
+Activates a feature for the code in the given block
+then restores the original state of the feature.
+
+```ruby
+FEATURE_FLAGS.active?(:feature_name) #=> false
+
+FEATURE_FLAGS.do_activate(:feature_name) do
+  FEATURE_FLAGS.active?(:feature_name) #=> true
+end
+
+FEATURE_FLAGS.active?(:feature_name) #=> false
+```
+
 #### Deactivate a feature
 
 Deactivates a feature in the global scope
@@ -163,6 +178,21 @@ FEATURE_FLAGS.deactivate(:feature_name)
 
 FEATURE_FLAGS.active?(:feature_name) #=> false
 FEATURE_FLAGS.inactive?(:feature_name) #=> true
+```
+
+#### Deactivate a feature in a block
+
+Activates a feature for the code in the given block
+then restores the original state of the feature.
+
+```ruby
+FEATURE_FLAGS.active?(:feature_name) #=> true
+
+FEATURE_FLAGS.do_deactivate(:feature_name) do
+  FEATURE_FLAGS.active?(:feature_name) #=> false
+end
+
+FEATURE_FLAGS.active?(:feature_name) #=> true
 ```
 
 #### Activate a feature for a particular record/object

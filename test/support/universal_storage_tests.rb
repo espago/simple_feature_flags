@@ -2,21 +2,18 @@
 # frozen_string_literal: true
 
 module Support
+  # @abstract
   module UniversalStorageTests
     class TestObject
       extend T::Sig
 
-      sig { returns Integer }
+      #: -> Integer
       def id
         __id__
       end
     end
 
     extend T::Sig
-    extend T::Helpers
-
-    abstract!
-
     sig { abstract.params(val: T.anything).void }
     def assert(val); end
     sig { abstract.params(val1: T.anything, val2: T.anything).void }
@@ -67,6 +64,21 @@ module Support
         number += 1
       end
       assert_equal 5, number
+    end
+
+    def test_do_deactivate
+      assert_equal :globally, feature_flags.active('feature_one')
+      feature_flags.do_deactivate('feature_one') do
+        assert_equal false, feature_flags.active('feature_two')
+      end
+      assert_equal :globally, feature_flags.active('feature_one')
+
+      feature_flags.add('feature_partial', '', :partially)
+      assert_equal :partially, feature_flags.active('feature_partial')
+      feature_flags.do_deactivate('feature_partial') do
+        assert_equal false, feature_flags.active('feature_partial')
+      end
+      assert_equal :partially, feature_flags.active('feature_partial')
     end
 
     def test_do_activate

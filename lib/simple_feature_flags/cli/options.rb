@@ -9,23 +9,23 @@ module SimpleFeatureFlags
     class Options
       extend T::Sig
 
-      sig { returns(OptionParser) }
+      #: OptionParser
       attr_reader :opt_parser
 
-      sig { returns(T::Boolean) }
+      #: bool
       attr_reader :generate
 
-      sig { returns(T::Boolean) }
+      #: bool
       attr_reader :rails
 
-      sig { returns(T::Boolean) }
+      #: bool
       attr_reader :ui
 
-      sig { params(args: T::Array[String]).void }
+      #: (Array[String] args) -> void
       def initialize(args)
-        @rails = T.let(true, T::Boolean)
-        @ui = T.let(false, T::Boolean)
-        @generate = T.let(false, T::Boolean)
+        @rails = true #: bool
+        @ui = false #: bool
+        @generate = false #: bool
 
         @opt_parser = ::OptionParser.new do |opts|
           opts.banner = 'Usage: simple_feature_flags [options]'

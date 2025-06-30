@@ -6,16 +6,18 @@ require 'yaml'
 module SimpleFeatureFlags
   # Stores feature flags in Redis.
   class RedisStorage < BaseStorage
-    sig { override.returns(String) }
+    # @override
+    #: String
     attr_reader :file
 
-    sig { override.returns(T::Array[String]) }
+    # @override
+    #: Array[String]
     attr_reader :mandatory_flags
 
-    sig { returns(T.any(::Redis, ::Redis::Namespace)) }
+    #: (::Redis | ::Redis::Namespace)
     attr_reader :redis
 
-    sig { params(redis: T.any(::Redis, ::Redis::Namespace), file: String).void }
+    #: ((::Redis | ::Redis::Namespace) redis, String file) -> void
     def initialize(redis, file)
       @file = file
       @redis = redis
@@ -25,7 +27,8 @@ module SimpleFeatureFlags
     end
 
     # Checks whether the flag is active. Returns `true`, `false`, `:globally` or `:partially`
-    sig { override.params(feature: T.any(Symbol, String)).returns(T.any(Symbol, T::Boolean)) }
+    # @override
+    #: ((Symbol | String) feature) -> (Symbol | bool)
     def active(feature)
       case redis.hget(feature.to_s, 'active')
       when 'globally'
@@ -40,7 +43,8 @@ module SimpleFeatureFlags
     end
 
     # Checks whether the flag is active.
-    sig { override.params(feature: T.any(Symbol, String)).returns(T::Boolean) }
+    # @override
+    #: ((Symbol | String) feature) -> bool
     def active?(feature)
       return true if active(feature)
 
@@ -48,45 +52,43 @@ module SimpleFeatureFlags
     end
 
     # Checks whether the flag is inactive.
-    sig { override.params(feature: T.any(Symbol, String)).returns(T::Boolean) }
+    # @override
+    #: ((Symbol | String) feature) -> bool
     def inactive?(feature)
       !active?(feature)
     end
 
     # Checks whether the flag is active globally, for every object.
-    sig { override.params(feature: T.any(Symbol, String)).returns(T::Boolean) }
+    # @override
+    #: ((Symbol | String) feature) -> bool
     def active_globally?(feature)
       ACTIVE_GLOBALLY.include? redis.hget(feature.to_s, 'active')
     end
 
     # Checks whether the flag is inactive globally, for every object.
-    sig { override.params(feature: T.any(Symbol, String)).returns(T::Boolean) }
+    # @override
+    #: ((Symbol | String) feature) -> bool
     def inactive_globally?(feature)
       !active_globally?(feature)
     end
 
     # Checks whether the flag is active partially, only for certain objects.
-    sig { override.params(feature: T.any(Symbol, String)).returns(T::Boolean) }
+    # @override
+    #: ((Symbol | String) feature) -> bool
     def active_partially?(feature)
       ACTIVE_PARTIALLY.include? redis.hget(feature.to_s, 'active')
     end
 
     # Checks whether the flag is inactive partially, only for certain objects.
-    sig { override.params(feature: T.any(Symbol, String)).returns(T::Boolean) }
+    # @override
+    #: ((Symbol | String) feature) -> bool
     def inactive_partially?(feature)
       !active_partially?(feature)
     end
 
     # Checks whether the flag is active for the given object.
-    sig do
-      override
-        .params(
-          feature:          T.any(Symbol, String),
-          object:           Object,
-          object_id_method: Symbol,
-        )
-        .returns(T::Boolean)
-    end
+    # @override
+    #: ((Symbol | String) feature, Object object, ?object_id_method: Symbol) -> bool
     def active_for?(feature, object, object_id_method: CONFIG.default_id_method)
       return false unless active?(feature)
       return true if active_globally?(feature)
@@ -100,21 +102,15 @@ module SimpleFeatureFlags
     end
 
     # Checks whether the flag is inactive for the given object.
-    sig do
-      override
-        .params(
-          feature:          T.any(Symbol, String),
-          object:           Object,
-          object_id_method: Symbol,
-        )
-        .returns(T::Boolean)
-    end
+    # @override
+    #: ((Symbol | String) feature, Object object, ?object_id_method: Symbol) -> bool
     def inactive_for?(feature, object, object_id_method: CONFIG.default_id_method)
       !active_for?(feature, object, object_id_method: object_id_method)
     end
 
     # Checks whether the flag exists.
-    sig { override.params(feature: T.any(Symbol, String)).returns(T::Boolean) }
+    # @override
+    #: ((Symbol | String) feature) -> bool
     def exists?(feature)
       return false if [nil, ''].include? redis.hget(feature.to_s, 'name')
 
@@ -122,19 +118,15 @@ module SimpleFeatureFlags
     end
 
     # Returns the description of the flag if it exists.
-    sig { override.params(feature: T.any(Symbol, String)).returns(T.nilable(String)) }
+    # @override
+    #: ((Symbol | String) feature) -> String?
     def description(feature)
       redis.hget(feature.to_s, 'description')
     end
 
     # Calls the given block if the flag is active.
-    sig do
-      override
-        .params(
-          feature: T.any(Symbol, String),
-          block:   T.proc.void,
-        ).void
-    end
+    # @override
+    #: ((Symbol | String) feature) { -> void } -> void
     def when_active(feature, &block)
       return unless active?(feature)
 
@@ -142,13 +134,8 @@ module SimpleFeatureFlags
     end
 
     # Calls the given block if the flag is inactive.
-    sig do
-      override
-        .params(
-          feature: T.any(Symbol, String),
-          block:   T.proc.void,
-        ).void
-    end
+    # @override
+    #: ((Symbol | String) feature) { -> void } -> void
     def when_inactive(feature, &block)
       return unless inactive?(feature)
 
@@ -156,13 +143,8 @@ module SimpleFeatureFlags
     end
 
     # Calls the given block if the flag is active globally.
-    sig do
-      override
-        .params(
-          feature: T.any(Symbol, String),
-          block:   T.proc.void,
-        ).void
-    end
+    # @override
+    #: ((Symbol | String) feature) { -> void } -> void
     def when_active_globally(feature, &block)
       return unless active_globally?(feature)
 
@@ -170,13 +152,8 @@ module SimpleFeatureFlags
     end
 
     # Calls the given block if the flag is inactive globally.
-    sig do
-      override
-        .params(
-          feature: T.any(Symbol, String),
-          block:   T.proc.void,
-        ).void
-    end
+    # @override
+    #: ((Symbol | String) feature) { -> void } -> void
     def when_inactive_globally(feature, &block)
       return unless inactive_globally?(feature)
 
@@ -184,13 +161,8 @@ module SimpleFeatureFlags
     end
 
     # Calls the given block if the flag is active partially.
-    sig do
-      override
-        .params(
-          feature: T.any(Symbol, String),
-          block:   T.proc.void,
-        ).void
-    end
+    # @override
+    #: ((Symbol | String) feature) { -> void } -> void
     def when_active_partially(feature, &block)
       return unless active_partially?(feature)
 
@@ -198,13 +170,8 @@ module SimpleFeatureFlags
     end
 
     # Calls the given block if the flag is inactive partially.
-    sig do
-      override
-        .params(
-          feature: T.any(Symbol, String),
-          block:   T.proc.void,
-        ).void
-    end
+    # @override
+    #: ((Symbol | String) feature) { -> void } -> void
     def when_inactive_partially(feature, &block)
       return unless inactive_partially?(feature)
 
@@ -212,15 +179,8 @@ module SimpleFeatureFlags
     end
 
     # Calls the given block if the flag is active for the given object.
-    sig do
-      override
-        .params(
-          feature:          T.any(Symbol, String),
-          object:           Object,
-          object_id_method: Symbol,
-          block:            T.proc.void,
-        ).void
-    end
+    # @override
+    #: ((Symbol | String) feature, Object object, ?object_id_method: Symbol) { -> void } -> void
     def when_active_for(feature, object, object_id_method: CONFIG.default_id_method, &block)
       return unless active_for?(feature, object, object_id_method: object_id_method)
 
@@ -228,15 +188,8 @@ module SimpleFeatureFlags
     end
 
     # Calls the given block if the flag is inactive for the given object.
-    sig do
-      override
-        .params(
-          feature:          T.any(Symbol, String),
-          object:           Object,
-          object_id_method: Symbol,
-          block:            T.proc.void,
-        ).void
-    end
+    # @override
+    #: ((Symbol | String) feature, Object object, ?object_id_method: Symbol) { -> void } -> void
     def when_inactive_for(feature, object, object_id_method: CONFIG.default_id_method, &block)
       return unless inactive_for?(feature, object, object_id_method: object_id_method)
 
@@ -244,7 +197,8 @@ module SimpleFeatureFlags
     end
 
     # Activates the given flag. Returns `false` if it does not exist.
-    sig { override.params(feature: T.any(Symbol, String)).returns(T::Boolean) }
+    # @override
+    #: ((Symbol | String) feature) -> bool
     def activate(feature)
       return false unless exists?(feature)
 
@@ -253,15 +207,8 @@ module SimpleFeatureFlags
       true
     end
 
-    sig do
-      override
-        .type_parameters(:R)
-        .params(
-          feature: T.any(Symbol, String),
-          block:   T.proc.returns(T.type_parameter(:R)),
-        )
-        .returns(T.type_parameter(:R))
-    end
+    # @override
+    #: [R] ((Symbol | String) feature) { -> R } -> R
     def do_activate(feature, &block)
       feature = feature.to_s
       prev_value = redis.hget(feature, 'active')
@@ -276,7 +223,8 @@ module SimpleFeatureFlags
     alias activate_globally activate
 
     # Activates the given flag partially. Returns `false` if it does not exist.
-    sig { override.params(feature: T.any(Symbol, String)).returns(T::Boolean) }
+    # @override
+    #: ((Symbol | String) feature) -> bool
     def activate_partially(feature)
       return false unless exists?(feature)
 
@@ -285,15 +233,8 @@ module SimpleFeatureFlags
       true
     end
 
-    sig do
-      override
-        .type_parameters(:R)
-        .params(
-          feature: T.any(Symbol, String),
-          block:   T.proc.returns(T.type_parameter(:R)),
-        )
-        .returns(T.type_parameter(:R))
-    end
+    # @override
+    #: [R] ((Symbol | String) feature) { -> R } -> R
     def do_activate_partially(feature, &block)
       feature = feature.to_s
       prev_value = redis.hget(feature, 'active')
@@ -304,14 +245,8 @@ module SimpleFeatureFlags
     end
 
     # Activates the given flag for the given objects. Returns `false` if it does not exist.
-    sig do
-      override
-        .params(
-          feature:          T.any(Symbol, String),
-          objects:          Object,
-          object_id_method: Symbol,
-        ).void
-    end
+    # @override
+    #: ((Symbol | String) feature, *Object objects, ?object_id_method: Symbol) -> void
     def activate_for(feature, *objects, object_id_method: CONFIG.default_id_method)
       return false unless exists?(feature)
 
@@ -331,14 +266,8 @@ module SimpleFeatureFlags
 
     # Activates the given flag for the given objects and sets the flag as partially active.
     # Returns `false` if it does not exist.
-    sig do
-      override
-        .params(
-          feature:          T.any(Symbol, String),
-          objects:          Object,
-          object_id_method: Symbol,
-        ).void
-    end
+    # @override
+    #: ((Symbol | String) feature, *Object objects, ?object_id_method: Symbol) -> void
     def activate_for!(feature, *objects, object_id_method: CONFIG.default_id_method)
       return false unless T.unsafe(self).activate_for(feature, *objects, object_id_method: object_id_method)
 
@@ -348,7 +277,8 @@ module SimpleFeatureFlags
     # Deactivates the given flag for all objects.
     # Resets the list of objects that this flag has been turned on for.
     # Returns `false` if it does not exist.
-    sig { override.params(feature: T.any(Symbol, String)).returns(T::Boolean) }
+    # @override
+    #: ((Symbol | String) feature) -> bool
     def deactivate!(feature)
       return false unless exists?(feature)
 
@@ -361,13 +291,25 @@ module SimpleFeatureFlags
     # Deactivates the given flag globally.
     # Does not reset the list of objects that this flag has been turned on for.
     # Returns `false` if it does not exist.
-    sig { override.params(feature: T.any(Symbol, String)).returns(T::Boolean) }
+    # @override
+    #: ((Symbol | String) feature) -> bool
     def deactivate(feature)
       return false unless exists?(feature)
 
       redis.hset(feature.to_s, 'active', 'false')
 
       true
+    end
+
+    # @override
+    #: [R] ((Symbol | String) feature) { -> R } -> R
+    def do_deactivate(feature, &block)
+      feature = feature.to_s
+      prev_value = redis.hget(feature, 'active')
+      deactivate(feature)
+      block.call
+    ensure
+      redis.hset(feature, 'active', prev_value)
     end
 
     # Returns a hash of Objects that the given flag is turned on for.
@@ -377,11 +319,8 @@ module SimpleFeatureFlags
     #
     #      { "Page" => [25, 89], "Book" => [152] }
     #
-    sig do
-      override
-        .params(feature: T.any(Symbol, String))
-        .returns(T::Hash[String, T::Array[Object]])
-    end
+    # @override
+    #: ((Symbol | String) feature) -> Hash[String, Array[Object]]
     def active_objects(feature)
       ::JSON.parse(redis.hget(feature.to_s, 'active_for_objects').to_s)
     rescue ::JSON::ParserError
@@ -389,14 +328,8 @@ module SimpleFeatureFlags
     end
 
     # Deactivates the given flag for the given objects. Returns `false` if it does not exist.
-    sig do
-      override
-        .params(
-          feature:          T.any(Symbol, String),
-          objects:          Object,
-          object_id_method: Symbol,
-        ).void
-    end
+    # @override
+    #: ((Symbol | String) feature, *Object objects, ?object_id_method: Symbol) -> void
     def deactivate_for(feature, *objects, object_id_method: CONFIG.default_id_method)
       return false unless exists?(feature)
 
@@ -417,12 +350,8 @@ module SimpleFeatureFlags
     end
 
     # Returns the data of the flag in a hash.
-    sig do
-      override
-        .params(
-          feature: T.any(Symbol, String),
-        ).returns(T.nilable(T::Hash[String, T.anything]))
-    end
+    # @override
+    #: ((Symbol | String) feature) -> Hash[String, top]?
     def get(feature)
       return unless exists?(feature)
 
@@ -438,14 +367,8 @@ module SimpleFeatureFlags
     end
 
     # Adds the given feature flag.
-    sig do
-      override
-        .params(
-          feature:     T.any(Symbol, String),
-          description: String,
-          active:      T.any(String, Symbol, T::Boolean, NilClass),
-        ).returns(T.nilable(T::Hash[String, T.anything]))
-    end
+    # @override
+    #: ((Symbol | String) feature, ?String description, ?(String | Symbol | bool)? active) -> Hash[String, top]?
     def add(feature, description = '', active = 'false')
       return if exists?(feature)
 
@@ -469,12 +392,8 @@ module SimpleFeatureFlags
 
     # Removes the given feature flag.
     # Returns its data or nil if it does not exist.
-    sig do
-      override
-        .params(
-          feature: T.any(Symbol, String),
-        ).returns(T.nilable(T::Hash[String, T.anything]))
-    end
+    # @override
+    #: ((Symbol | String) feature) -> Hash[String, top]?
     def remove(feature)
       return unless exists?(feature)
 
@@ -485,9 +404,8 @@ module SimpleFeatureFlags
     end
 
     # Returns the data of all feature flags.
-    sig do
-      override.returns(T::Array[T::Hash[String, T.anything]])
-    end
+    # @override
+    #: -> Array[Hash[String, top]]
     def all
       keys = []
       hashes = []
@@ -501,7 +419,7 @@ module SimpleFeatureFlags
       hashes
     end
 
-    sig { returns(T.nilable(Redis::Namespace)) }
+    #: -> Redis::Namespace?
     def namespaced_redis
       r = redis
       return unless r.is_a?(Redis::Namespace)

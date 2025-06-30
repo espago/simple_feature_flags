@@ -6,10 +6,10 @@ module SimpleFeatureFlags
   class Configuration
     extend T::Sig
 
-    sig { returns(Symbol) }
+    #: Symbol
     attr_accessor :default_id_method
 
-    sig { void }
+    #: -> void
     def initialize
       @default_id_method = :id
     end
